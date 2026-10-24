@@ -1,4 +1,3 @@
-
 import { test as setup, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { loginData } from '../test-data/loginData';
