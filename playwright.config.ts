@@ -1,8 +1,8 @@
+
 import { defineConfig, devices } from '@playwright/test';
 
 // Playwright test configuration
 export default defineConfig({
-
   // Folder where Playwright looks for test files
   testDir: './tests',
 
@@ -18,53 +18,51 @@ export default defineConfig({
   // Uses one worker on CI; default worker count locally
   workers: process.env.CI ? 1 : undefined,
 
-  // Generates an HTML report after test execution
-  reporter: 'html',
+  // Generate mergeable blob reports in CI and HTML locally
+  reporter: process.env.CI ? 'blob' : 'html',
 
   // Shared settings applied to tests
   use: {
     // Base URL used with relative navigation paths
-    // Example: await page.goto('/')
     baseURL: 'https://www.saucedemo.com',
 
-    // Captures a trace on the first retry of a failed test
+    // Capture trace on the first retry of a failed test
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
 
+    // Capture screenshots only when tests fail
+    screenshot: 'only-on-failure',
   },
 
   // Run tests across different browsers
-  
-projects: [
-  {
-    name: 'setup',
-    testDir: './auth',
-    testMatch: '**/auth.setup.ts',
-  },
-  {
-    name: 'chromium',
-    use: {
-      ...devices['Desktop Chrome'],
-      storageState: 'playwright/.auth/user.json',
+  projects: [
+    {
+      name: 'setup',
+      testDir: './auth',
+      testMatch: '**/auth.setup.ts',
     },
-    dependencies: ['setup'],
-  },
-  {
-    name: 'firefox',
-    use: {
-      ...devices['Desktop Firefox'],
-      storageState: 'playwright/.auth/user.json',
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
-    dependencies: ['setup'],
-  },
-  {
-    name: 'webkit',
-    use: {
-      ...devices['Desktop Safari'],
-      storageState: 'playwright/.auth/user.json',
+    {
+      name: 'firefox',
+      use: {
+        ...devices['Desktop Firefox'],
+        storageState: 'playwright/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
-    dependencies: ['setup'],
-  },
-],
-
+    {
+      name: 'webkit',
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: 'playwright/.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
+  ],
 });
