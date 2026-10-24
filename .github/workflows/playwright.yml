@@ -33,10 +33,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Type check
+      # Check TypeScript for errors
       - name: TypeScript type check
         run: npm run typecheck
 
+      # Check code quality with ESLint
+      - name: ESLint code quality check
+        run: npm run lint
+        
       # Install Chromium, Firefox, WebKit and system dependencies
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
