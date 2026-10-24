@@ -64,5 +64,23 @@ export default defineConfig({
       },
       dependencies: ['setup'],
     },
+
+    // Dedicated project for API automation
+    {
+      name: 'api',
+      testDir: './api-tests',
+      use: {
+        // Base URL for our practice API
+        baseURL: 'https://jsonplaceholder.typicode.com',
+      },
+    },
+    // API Authentication & Authorization Tests (DummyJSON)
+    {
+      name: 'auth-api',
+      testDir: './auth-api-tests',
+      use: {
+        baseURL: 'https://dummyjson.com',
+      },
+    },
   ],
 });
