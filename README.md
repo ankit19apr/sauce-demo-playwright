@@ -1,9 +1,6 @@
-# SauceDemo Playwright Automation Framework
+# 🚀 Playwright & TypeScript Automation Framework | UI, REST API & CI/CD
 
-A practical **Playwright + TypeScript** framework for browser UI
-automation and API testing. The project combines reusable UI components,
-typed API clients, authentication handling, response validation, and
-GitHub Actions CI.
+Automated testing of **SauceDemo UI**, **JSONPlaceholder REST APIs**, and **DummyJSON Authentication APIs**, with reusable test architecture, token management, response validation, and GitHub Actions CI/CD.
 
 > **Project note:** The paths and API files listed below reflect the
 > current project context. Keep the names of browser projects and any
