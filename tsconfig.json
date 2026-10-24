@@ -1,5 +1,29 @@
 {
-  "compilerOptions": {
-    "types": ["node"]
-  }
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "Node16",
+        "moduleResolution": "Node16",
+        "lib": [
+            "ES2022",
+            "DOM"
+        ],
+        "types": [
+            "node"
+        ],
+        "strict": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true
+    },
+    "include": [
+        "**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "playwright-report",
+        "test-results",
+        "blob-report",
+        "all-blob-reports"
+    ]
 }
