@@ -1,38 +1,142 @@
 # SauceDemo Playwright Automation Framework
 
-A UI test automation framework for
-[SauceDemo](https://www.saucedemo.com/) built with **Playwright**,
-**TypeScript**, and the **Page Object Model (POM)**. The project
-includes reusable fixtures, authenticated test setup, cross-browser
-execution, and GitHub Actions CI with sharding and consolidated HTML
-reporting.
+A UI automation framework for [SauceDemo](https://www.saucedemo.com/)
+built with **Playwright**, **TypeScript**, and the **Page Object Model
+(POM)**. It includes reusable fixtures, authenticated test setup,
+cross-browser testing, GitHub Actions CI with four-way sharding,
+consolidated HTML reporting, and TypeScript/ESLint quality gates.
 
 ## Features
 
--   **Page Object Model:** page classes encapsulate locators and user
-    actions.
--   **Reusable fixtures:** shared test setup through custom Playwright
-    fixtures.
--   **Authentication setup:** logs in and saves browser storage state
-    for dependent projects.
--   **Cross-browser coverage:** Chromium, Firefox, and WebKit.
--   **UI test coverage:** login, inventory, product details, sorting,
-    cart operations, checkout, order confirmation, and negative checkout
+-   Page Object Model with dedicated page classes.
+-   Reusable Playwright fixtures.
+-   Authentication setup using saved browser storage state.
+-   Cross-browser execution across Chromium, Firefox, and WebKit.
+-   UI coverage for login, inventory, product details, sorting, cart
+    operations, checkout, order confirmation, and negative checkout
     validation.
--   **Failure evidence:** screenshots on failure and traces on the first
-    retry.
--   **CI execution:** GitHub Actions runs on pushes to `main`, pull
-    requests targeting `main`, and manual workflow dispatch.
--   **Sharding and reporting:** CI uses Playwright's blob reporter so
-    shard reports can be merged into one HTML report artifact.
+-   Screenshots on failure and traces on the first retry.
+-   TypeScript checks with `tsc --noEmit`.
+-   ESLint checks for JavaScript/TypeScript code quality.
+-   GitHub Actions on pushes to `main`, pull requests targeting `main`,
+    and manual workflow dispatch.
+-   Four-way Playwright sharding and merged HTML reporting.
 
 ## Tech Stack
 
--   TypeScript
--   Node.js and npm
--   `@playwright/test`
+-   TypeScript and Node.js
+-   Playwright Test (`@playwright/test`)
+-   ESLint with `typescript-eslint`
 -   Git and GitHub
 -   GitHub Actions
+
+## Framework Architecture
+
+The framework separates test scenarios, page-specific interactions,
+shared fixtures, authentication, and test data.
+
+``` mermaid
+flowchart TD
+    A["Playwright Test Specs<br/>tests/*.spec.ts"] --> B["Custom Fixtures<br/>fixture/myfixtures.ts"]
+    B --> C["Page Object Model"]
+    C --> D["LoginPage"]
+    C --> E["InventoryPage"]
+    C --> F["ProductDetailsPage"]
+    C --> G["CartPage"]
+    C --> H["CheckoutPage"]
+    D --> I["SauceDemo Web Application"]
+    E --> I
+    F --> I
+    G --> I
+    H --> I
+    J["Authentication Setup<br/>auth/auth.setup.ts"] --> K["Saved Storage State<br/>playwright/.auth/user.json"]
+    K --> B
+    L["Test Data<br/>test-data/loginData.ts"] --> D
+    M["Utilities<br/>utils/screenshotHelper.ts"] --> A
+```
+
+### Main components
+
+  -----------------------------------------------------------------------
+  Component                           Responsibility
+  ----------------------------------- -----------------------------------
+  `tests/`                            Test scenarios and assertions for
+                                      login, inventory, cart, and
+                                      checkout.
+
+  `pages/`                            Page Object Model classes
+                                      encapsulating locators and page
+                                      actions.
+
+  `fixture/myfixtures.ts`             Reusable test fixtures and shared
+                                      setup.
+
+  `auth/auth.setup.ts`                Signs in and saves browser storage
+                                      state for dependent projects.
+
+  `test-data/`                        Centralized test data such as login
+                                      data.
+
+  `utils/`                            Shared helper utilities.
+
+  `playwright.config.ts`              Test discovery, reporters, retries,
+                                      workers, browser projects, and
+                                      project dependencies.
+
+  `tsconfig.json`                     TypeScript compiler settings.
+
+  `eslint.config.mjs`                 ESLint flat configuration and lint
+                                      rules.
+  -----------------------------------------------------------------------
+
+## CI/CD Architecture
+
+The GitHub Actions workflow runs code-quality checks before browser
+installation and test execution. Four shard jobs execute in parallel;
+each uploads a Playwright blob report. A merge job combines available
+reports and uploads a consolidated HTML report.
+
+``` mermaid
+flowchart TD
+    A["Push to main / Pull Request / Manual Run"] --> B["GitHub Actions Workflow"]
+    B --> C["Checkout + Setup Node.js"]
+    C --> D["npm ci"]
+    D --> E["TypeScript Check<br/>npm run typecheck"]
+    E --> F["ESLint Check<br/>npm run lint"]
+    F --> G["Four Shard Jobs in Parallel"]
+    G --> H1["Shard 1<br/>Install browsers + run tests"]
+    G --> H2["Shard 2<br/>Install browsers + run tests"]
+    G --> H3["Shard 3<br/>Install browsers + run tests"]
+    G --> H4["Shard 4<br/>Install browsers + run tests"]
+    H1 --> I1["blob-report-1"]
+    H2 --> I2["blob-report-2"]
+    H3 --> I3["blob-report-3"]
+    H4 --> I4["blob-report-4"]
+    I1 --> J["Merge Reports"]
+    I2 --> J
+    I3 --> J
+    I4 --> J
+    J --> K["consolidated-playwright-report<br/>HTML Artifact"]
+```
+
+### CI workflow stages
+
+1.  Check out the repository.
+2.  Set up Node.js.
+3.  Install dependencies with `npm ci`.
+4.  Run the TypeScript quality check using `npm run typecheck`.
+5.  Run ESLint using `npm run lint`.
+6.  Install Playwright browsers and Linux system dependencies in each
+    shard job.
+7.  Run the assigned Playwright shard.
+8.  Upload each shard's blob report.
+9.  Download and merge available blob reports.
+10. Upload the consolidated HTML report artifact.
+
+> **Note:** Four shards run on separate GitHub-hosted runners. Each
+> shard currently installs Chromium, Firefox, and WebKit, so initial
+> runs may spend significant time downloading browsers. Sharding does
+> not guarantee a fourfold speed improvement.
 
 ## Project Structure
 
@@ -61,21 +165,23 @@ sauce-demo-playwright/
 ├── utils/
 │   └── screenshotHelper.ts
 ├── playwright/
-│   └── .auth/                 # Generated locally; not committed
+│   └── .auth/                 # Generated locally; do not commit
+├── eslint.config.mjs
 ├── playwright.config.ts
+├── tsconfig.json
 ├── package.json
 ├── package-lock.json
 └── README.md
 ```
 
-> This tree shows the main project files; supporting files may be added
-> as the framework evolves.
+This tree shows the main project files; supporting files may be added as
+the framework evolves.
 
 ## Prerequisites
 
 -   Node.js and npm
 -   Git
--   A GitHub account to use the CI workflow
+-   A GitHub account for CI execution
 
 The current GitHub Actions workflow uses Node.js 22.
 
@@ -96,81 +202,102 @@ npm ci
 
 ### 3. Install Playwright browsers
 
-For local cross-browser testing:
+For local testing:
 
 ``` bash
 npx playwright install
 ```
 
-On Linux CI runners, the workflow installs browsers and system
-dependencies using:
+On the Linux CI runner, browsers and system dependencies are installed
+with:
 
 ``` bash
 npx playwright install --with-deps
 ```
 
-### 4. Run the tests
+## Run Tests and Quality Checks
 
-Run the full suite:
+  -------------------------------------------------------------------------------------------------------
+  Task                                Command
+  ----------------------------------- -------------------------------------------------------------------
+  Run the full Playwright suite       `npm test`
 
-``` bash
-npm test
-```
+  Run tests in headed mode            `npm run test:headed`
 
-Run tests in headed mode:
+  Run the Chromium project            `npm run test:chromium`
 
-``` bash
-npm run test:headed
-```
+  TypeScript type check               `npm run typecheck`
 
-Run the Chromium project:
+  ESLint code-quality check           `npm run lint`
 
-``` bash
-npm run test:chromium
-```
+  Open the local HTML report          `npm run report`
 
-Open the most recent local HTML report:
+  Run shard 1 of 4 locally            `npx playwright test --shard=1/4`
 
-``` bash
-npm run report
-```
-
-The exact available npm scripts are defined in `package.json`.
+  Merge downloaded blob reports       `npx playwright merge-reports --reporter html ./all-blob-reports`
+  -------------------------------------------------------------------------------------------------------
 
 ## Authentication
 
-The `auth/auth.setup.ts` setup project signs in through the `LoginPage`
-page object and saves authenticated browser state to:
+The `auth/auth.setup.ts` setup project signs in using the `LoginPage`
+page object and saves browser storage state to:
 
 ``` text
 playwright/.auth/user.json
 ```
 
 The Chromium, Firefox, and WebKit projects depend on the setup project
-and use this saved state. The storage-state file contains session data
+and use this saved state. The authentication file contains session data
 and must not be committed.
 
-The authentication setup imports `loginData` from
-`test-data/loginData.ts`. Do not commit real credentials, passwords, or
-other secrets. If credentials are moved to environment variables or
-GitHub Secrets, update the login-data implementation to read them
-securely.
+The setup imports `loginData` from `test-data/loginData.ts`. Do not
+commit real credentials or secrets. If credentials are moved to
+environment variables or GitHub Secrets, update the login-data
+implementation to read them securely.
 
-The repository's `.gitignore` should exclude at least:
+Ensure `.gitignore` excludes generated files and authentication state,
+for example:
 
 ``` gitignore
-/playwright/.auth/
 node_modules/
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/playwright/.auth/
 .env
 .env.*
 !.env.example
 ```
 
-## GitHub Actions CI
+## TypeScript Configuration
+
+The `tsconfig.json` file configures TypeScript checking. The `typecheck`
+script runs:
+
+``` bash
+tsc --noEmit
+```
+
+This checks the included TypeScript files without emitting JavaScript
+output.
+
+## ESLint Configuration
+
+The `eslint.config.mjs` file uses ESLint's flat configuration,
+recommended JavaScript rules, and recommended TypeScript rules from
+`typescript-eslint`.
+
+Run linting with:
+
+``` bash
+npm run lint
+```
+
+Linting and TypeScript type checking complement one another; neither
+replaces executing the tests.
+
+## GitHub Actions and Consolidated Reporting
 
 Workflow file:
 
@@ -178,82 +305,57 @@ Workflow file:
 .github/workflows/playwright.yml
 ```
 
-The workflow runs on:
+The workflow runs on pushes to `main`, pull requests targeting `main`,
+and manual execution using `workflow_dispatch`.
 
--   Pushes to `main`
--   Pull requests targeting `main`
--   Manual execution using `workflow_dispatch`
-
-The workflow runs four shard jobs in parallel. Each shard installs
-dependencies and Playwright browsers, then executes its assigned portion
-of the suite. Each job uploads a Playwright blob report. A dependent
-merge job downloads the shard reports, merges them, and uploads one
-consolidated HTML report.
-
-### CI reporting flow
-
-``` text
-GitHub event
-    |
-    v
-Four parallel shard jobs
-    |
-    +--> Shard 1 --> blob report
-    +--> Shard 2 --> blob report
-    +--> Shard 3 --> blob report
-    +--> Shard 4 --> blob report
-                    |
-                    v
-              Merge reports
-                    |
-                    v
-       consolidated-playwright-report
-```
-
-### Download the consolidated report
+To download the consolidated report:
 
 1.  Open the repository on GitHub.
 2.  Select **Actions**.
-3.  Open the completed **Playwright Tests** workflow run.
-4.  In the run summary, find `consolidated-playwright-report`.
+3.  Open a completed **Playwright Tests** workflow run.
+4.  Find `consolidated-playwright-report` in the run summary's Artifacts
+    section.
 5.  Download and extract the ZIP.
 6.  Open `index.html` in a browser.
 
-The individual shard artifacts are named `blob-report-1`,
-`blob-report-2`, `blob-report-3`, and `blob-report-4`. The current
-workflow retains them for one day and retains the consolidated HTML
-report for 14 days.
+The current workflow retains individual shard artifacts for one day and
+the consolidated HTML report for 14 days.
 
-### Notes about sharding
-
--   Sharding distributes test execution across separate GitHub-hosted
-    jobs; it does not guarantee a proportional speed improvement.
--   The current workflow installs Chromium, Firefox, and WebKit in each
-    shard job, which can make initial runs slow.
--   A shard that fails after tests start can still upload its report
-    when a blob report exists. If a job fails before producing a report,
-    report merging may need troubleshooting.
--   Review workflow logs if browser installation, authentication setup,
-    tests, or report merging fails.
+A shard that fails after producing a blob report may still upload that
+report. If a job fails before producing a report, merging may require
+troubleshooting. Review the GitHub Actions logs if dependency
+installation, quality checks, authentication, browser installation,
+tests, or report merging fails.
 
 ## Test Coverage
 
-The framework covers the main SauceDemo user journeys, including:
+The suite covers the main SauceDemo user journeys:
 
 -   Login scenarios
 -   Inventory and product details
 -   Product sorting
 -   Adding and removing cart items
--   Checkout information and order overview
+-   Checkout information and overview
 -   Order completion
 -   Negative checkout validation
 
-For the current list of individual scenarios, refer to the spec files in
-`tests/`.
+Refer to the spec files under `tests/` for individual scenarios.
 
 ## Troubleshooting
 
+### TypeScript check fails
+
+Run `npm run typecheck`, review the compiler errors, and fix the
+relevant source or type configuration.
+
+### ESLint reports errors
+
+Run `npm run lint`. Review the file, line, and rule reported. Fix the
+code where appropriate rather than disabling rules without a reason.
+
 ### Browser executable is missing
+
+Run:
 
 ``` bash
 npx playwright install
@@ -261,54 +363,31 @@ npx playwright install
 
 ### Authentication storage state is missing
 
-Confirm that the setup project runs successfully and saves
-`playwright/.auth/user.json`. Ensure the authentication directory exists
-before the storage-state file is written.
+Confirm that the setup project completes successfully and writes
+`playwright/.auth/user.json`. Ensure the directory exists before the
+storage-state file is written.
 
 ### Tests fail only in CI
 
-Inspect the failed step in GitHub Actions. Check browser/test logs,
-screenshots, traces, environment differences, timeouts, and
-dependency-installation errors. CI uses retries and one Playwright
-worker per shard in the current configuration.
+Inspect the failed step and logs in GitHub Actions. Review screenshots,
+traces, timeouts, and differences between local and CI environments.
 
 ### Consolidated report is missing
 
-Confirm that each shard produced and uploaded its `blob-report/` output,
-that the merge job downloaded the shard artifacts, and that
-`merge-reports` completed successfully.
+Confirm that shard jobs produced and uploaded blob reports, the merge
+job downloaded them, and `playwright merge-reports` completed
+successfully.
 
-## Useful Commands
+## Potential Next Improvements
 
-  -------------------------------------------------------------------------------------------------------
-  Task                                Command
-  ----------------------------------- -------------------------------------------------------------------
-  Install dependencies                `npm ci`
-
-  Install local browsers              `npx playwright install`
-
-  Run all tests                       `npm test`
-
-  Run headed tests                    `npm run test:headed`
-
-  Run Chromium project                `npm run test:chromium`
-
-  Open local HTML report              `npm run report`
-
-  Run shard 1 of 4 locally            `npx playwright test --shard=1/4`
-
-  Merge downloaded blob reports       `npx playwright merge-reports --reporter html ./all-blob-reports`
-  -------------------------------------------------------------------------------------------------------
-
-## Future Improvements
-
--   Cache dependencies or browser downloads where it measurably improves
-    CI time.
--   Retain traces and screenshots as CI artifacts when useful.
--   Add API tests and integrate them into the pipeline.
--   Add scheduled cross-browser runs or separate smoke and regression
-    workflows.
--   Expand test data management and secret handling.
+-   Optimize CI browser installation and caching based on measured
+    runtime.
+-   Preserve traces and screenshots as CI artifacts where useful.
+-   Add API automation with Playwright's `APIRequestContext`.
+-   Separate smoke and regression workflows.
+-   Add accessibility checks, SQL/data validation, and performance
+    testing.
+-   Explore AI-assisted failure triage with human review.
 
 ## Author
 
