@@ -29,24 +29,42 @@ export default defineConfig({
 
     // Captures a trace on the first retry of a failed test
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+
   },
 
   // Run tests across different browsers
-  projects: [
-    {
-      // Google Chrome-compatible Chromium browser
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+  
+projects: [
+  {
+    name: 'setup',
+    testDir: './auth',
+    testMatch: '**/auth.setup.ts',
+  },
+  {
+    name: 'chromium',
+    use: {
+      ...devices['Desktop Chrome'],
+      storageState: 'playwright/.auth/user.json',
     },
-    {
-      // Firefox browser
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+    dependencies: ['setup'],
+  },
+  {
+    name: 'firefox',
+    use: {
+      ...devices['Desktop Firefox'],
+      storageState: 'playwright/.auth/user.json',
     },
-    {
-      // WebKit browser engine, used by Safari
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+    dependencies: ['setup'],
+  },
+  {
+    name: 'webkit',
+    use: {
+      ...devices['Desktop Safari'],
+      storageState: 'playwright/.auth/user.json',
     },
-  ],
+    dependencies: ['setup'],
+  },
+],
+
 });
