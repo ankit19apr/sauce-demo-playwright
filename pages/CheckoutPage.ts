@@ -1,3 +1,4 @@
+
 import { Page, Locator } from '@playwright/test';
 
 export class CheckoutPage {
@@ -18,8 +19,7 @@ export class CheckoutPage {
     readonly totalLabel: Locator;
     readonly finishButton: Locator;
 
-    // Checkout : Negative
-
+    // Checkout form validation
     readonly errorMessage: Locator;
 
     // Checkout: Complete
@@ -29,13 +29,13 @@ export class CheckoutPage {
     constructor(page: Page) {
         this.page = page;
 
+        // Customer information page heading
+        this.informationLabel = page.getByText(
+            'Checkout: Your Information',
+            { exact: true },
+        );
+
         // Customer information fields
-
-        // Label displayed on the customer information page
-        this.informationLabel = page.getByText('Checkout: Your Information', {
-            exact: true,
-        });
-
         this.firstNameInput = page.getByRole('textbox', {
             name: 'First Name',
         });
@@ -48,6 +48,7 @@ export class CheckoutPage {
             name: 'Zip/Postal Code',
         });
 
+        // Customer information actions
         this.continueButton = page.getByRole('button', {
             name: 'Continue',
         });
@@ -56,7 +57,7 @@ export class CheckoutPage {
             name: 'Cancel',
         });
 
-        // Order overview
+        // Order overview elements
         this.checkoutItems = page.locator('.cart_item');
         this.subtotalLabel = page.locator('.summary_subtotal_label');
         this.taxLabel = page.locator('.summary_tax_label');
@@ -66,14 +67,14 @@ export class CheckoutPage {
             name: 'Finish',
         });
 
-        // Order confirmation
+        // Order confirmation elements
         this.confirmationMessage = page.locator('.complete-header');
 
         this.backHomeButton = page.getByRole('button', {
             name: 'Back Home',
         });
 
-        // Checkout form validation error message
+        // Validation error displayed by the checkout form
         this.errorMessage = page.locator('[data-test="error"]');
     }
 }

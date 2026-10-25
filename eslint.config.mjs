@@ -10,6 +10,12 @@ export default tseslint.config(
       'blob-report/',
       'all-blob-reports/',
       'playwright/.auth/',
+      // Generated Allure dashboard and result files
+      'allure-report/',
+      'allure-results/',
+
+      // Other generated reports
+      'coverage/',
     ],
   },
   js.configs.recommended,

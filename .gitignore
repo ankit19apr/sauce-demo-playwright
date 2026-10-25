@@ -9,3 +9,9 @@ node_modules/
 .env
 .env.*
 !.env.example
+
+# Generated Allure test results
+/allure-results/
+
+# Generated Allure HTML dashboard
+/allure-report/
