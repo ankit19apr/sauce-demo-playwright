@@ -1,18 +1,24 @@
-# 🚀 Playwright & TypeScript Automation Framework | UI, REST API & CI/CD
+# 🚀 Playwright & TypeScript Automation Framework \| UI, REST API & CI/CD
 
-Automated testing of **SauceDemo UI**, **JSONPlaceholder REST APIs**, and **DummyJSON Authentication APIs**, with reusable test architecture, token management, response validation, and GitHub Actions CI/CD.
+A QA/SDET automation framework demonstrating end-to-end UI testing of
+**SauceDemo**, REST API testing against **JSONPlaceholder**,
+authentication API testing against **DummyJSON**, and CI execution with
+**GitHub Actions**.
 
-> **Project note:** The paths and API files listed below reflect the
-> current project context. Keep the names of browser projects and any
-> additional UI folders aligned with the actual `playwright.config.ts`
-> and repository.
+The framework uses Playwright Test with TypeScript, Page Object Model
+(POM), reusable fixtures and API clients, Zod response validation, and
+two reporting options: the native Playwright HTML report and **Allure
+Report**.
+
+> **Project note:** The project structure and project names below
+> reflect the intended current framework. Keep them aligned with the
+> actual files in `playwright.config.ts` and the repository.
 
 ## Table of Contents
 
 -   [Overview](#overview)
 -   [Technology Stack](#technology-stack)
 -   [Framework Architecture](#framework-architecture)
--   [Test Execution Flow](#test-execution-flow)
 -   [Project Structure](#project-structure)
 -   [UI Automation Design](#ui-automation-design)
 -   [API Automation Design](#api-automation-design)
@@ -20,49 +26,57 @@ Automated testing of **SauceDemo UI**, **JSONPlaceholder REST APIs**, and **Dumm
     Lifecycle](#authentication-and-token-lifecycle)
 -   [Setup](#setup)
 -   [Running Tests](#running-tests)
--   [Reporting and Evidence](#reporting-and-evidence)
+-   [Reporting and Test Evidence](#reporting-and-test-evidence)
 -   [GitHub Actions CI](#github-actions-ci)
 -   [Environment Variables and
     Security](#environment-variables-and-security)
 -   [Troubleshooting](#troubleshooting)
+-   [Skills Demonstrated](#skills-demonstrated)
 
 ## Overview
 
-The framework is designed to demonstrate practical QA/SDET engineering
-skills:
+The framework demonstrates practical QA/SDET engineering skills:
 
--   Browser-based end-to-end tests for SauceDemo.
--   Page Object Model (POM) to separate page locators/actions from test
+-   End-to-end UI automation for SauceDemo.
+-   Page Object Model to separate locators and page actions from test
     scenarios.
--   Shared fixtures for reusable test setup.
--   Screenshot evidence attached to test results where implemented.
--   API tests against JSONPlaceholder and DummyJSON practice APIs.
+-   Shared fixtures for reusable setup and controlled resource cleanup.
+-   Cross-browser testing with Chromium, Firefox, and WebKit.
+-   API testing against JSONPlaceholder and DummyJSON practice APIs.
 -   Reusable, typed API clients.
 -   Zod runtime validation for selected response payloads.
 -   Bearer-token authentication, token reuse, refresh flow, and a
     bounded retry for authenticated GET requests.
--   GitHub Actions execution, sharded UI testing, artifacts, and
-    consolidated HTML reporting.
+-   TypeScript type checking and ESLint quality checks.
+-   GitHub Actions CI with sharded UI execution, API testing, uploaded
+    artifacts, and consolidated reporting.
+-   Native Playwright HTML reporting plus Allure reporting.
 
 ## Technology Stack
 
   -----------------------------------------------------------------------
   Technology                          Purpose
   ----------------------------------- -----------------------------------
-  Node.js and npm                     JavaScript/TypeScript runtime and
-                                      dependency management
+  Node.js and npm                     Runtime and dependency management
 
   TypeScript                          Static typing for tests, API
                                       clients, and helpers
 
-  Playwright Test                     UI and API test runner, fixtures,
-                                      assertions, projects, and reporting
+  Playwright Test                     UI/API test runner, fixtures,
+                                      assertions, projects, and reporters
 
-  Zod                                 Runtime validation of API response
-                                      shapes
+  Allure (`allure`)                   Generates and serves Allure reports
 
-  dotenv                              Load local environment variables
+  `allure-playwright`                 Collects Playwright test results
+                                      for Allure
+
+  Zod                                 Runtime validation of selected API
+                                      response shapes
+
+  dotenv                              Loads local environment variables
                                       from `.env`
+
+  ESLint                              Code-quality and lint checks
 
   GitHub Actions                      CI execution on pushes, pull
                                       requests, and manual runs
@@ -78,11 +92,11 @@ flowchart TD
     A[Playwright Test Runner] --> B[UI Test Suites]
     A --> C[API Test Suites]
 
-    B --> D[Custom Fixtures]
+    B --> D[Custom UI Fixtures]
     D --> E[Authenticated Page]
     E --> F[Page Objects]
-    F --> G[SauceDemo Web Application]
-    B --> H[Screenshot Helper / Test Evidence]
+    F --> G[SauceDemo]
+    B --> H[Screenshots and Test Evidence]
 
     C --> I[Posts API Tests]
     C --> J[Authentication API Tests]
@@ -91,150 +105,106 @@ flowchart TD
     J --> M[AuthenticatedApiClient]
     J --> N[Authentication Fixtures]
     K --> O[JSONPlaceholder API]
-    L --> P[DummyJSON Auth API]
+    L --> P[DummyJSON API]
     M --> P
     N --> L
 
     Q[playwright.config.ts] --> A
-    R[GitHub Actions] --> A
-    A --> S[Blob Reports]
-    S --> T[Merge Reports]
-    T --> U[HTML Report Artifact]
+    A --> R[Playwright HTML Report]
+    A --> S[Allure Results]
+    A --> T[CI Blob Reports]
+    T --> U[Merge Reports]
+    U --> V[Consolidated Playwright HTML Artifact]
+    S --> W[Allure Report Generation]
+    W --> X[Consolidated Allure Artifact]
 ```
 
 ### Main layers
 
-1.  **Test layer:** describes scenarios and assertions.
-2.  **Fixture layer:** provides reusable setup and controlled resource
+1.  **Test layer:** Describes scenarios and assertions.
+2.  **Fixture layer:** Provides reusable setup and controlled resource
     cleanup.
-3.  **UI page-object layer:** encapsulates page locators and user
+3.  **UI page-object layer:** Encapsulates page locators and user
     interactions.
-4.  **API client layer:** centralizes HTTP operations, typing, and
+4.  **API client layer:** Centralizes HTTP operations, typing, and
     authentication behavior.
-5.  **Validation layer:** checks response status, headers, payload
-    values, and Zod schemas.
-6.  **Configuration and CI layer:** selects projects, browsers, test
+5.  **Validation layer:** Checks response status, headers, payload
+    values, and selected Zod schemas.
+6.  **Configuration and CI layer:** Selects projects, browsers,
     execution settings, and report handling.
-
-## Test Execution Flow
-
-### Local execution
-
-``` mermaid
-flowchart TD
-    A[Developer runs an npm / Playwright command] --> B[Read Playwright configuration]
-    B --> C{Selected project}
-    C -->|UI browser project| D[Start browser and create fixtures]
-    D --> E[Execute UI test]
-    E --> F[Page Objects interact with SauceDemo]
-    F --> G[Assertions and optional screenshots]
-
-    C -->|api| H[Run Posts API tests]
-    H --> I[PostsApi sends HTTP requests]
-    I --> J[Validate status and response body]
-
-    C -->|auth-api| K[Run authentication tests]
-    K --> L[Load credentials from environment]
-    L --> M[Login / reuse token / refresh as required]
-    M --> N[Call protected endpoint and assert response]
-
-    G --> O[Playwright results and reports]
-    J --> O
-    N --> O
-```
-
-### CI execution
-
-``` mermaid
-flowchart TD
-    A[Push to main / Pull Request / Manual trigger] --> B[GitHub Actions workflow]
-    B --> C[Install dependencies]
-    C --> D[UI test job: 4 shards]
-    C --> E[API test job]
-
-    D --> F[Upload UI blob reports]
-    E --> G[Upload API blob report]
-
-    F --> H[Merge report job]
-    G --> H
-    H --> I[Consolidated HTML report artifact]
-```
 
 ## Project Structure
 
-The following diagram shows the key folders and files in the current
-framework. Other UI test files may exist in the repository.
+Key folders and files in the framework:
 
 ``` text
 sauce-demo-playwright/
 ├── .github/
 │   └── workflows/
-│       └── playwright.yml          # GitHub Actions workflow (filename may differ)
-│
+│       └── playwright.yml       # GitHub Actions workflow
 ├── api/
-│   ├── PostsApi.ts                 # Typed Posts API client
-│   ├── AuthApi.ts                  # Login, token cache and refresh handling
-│   └── AuthenticatedApiClient.ts   # Authenticated GET and bounded retry
-│
+│   ├── PostsApi.ts              # Typed Posts API client
+│   ├── AuthApi.ts               # Login, token cache and refresh handling
+│   └── AuthenticatedApiClient.ts # Authenticated GET and bounded retry
 ├── api-tests/
-│   └── posts.spec.ts               # JSONPlaceholder API tests
-│
+│   └── posts.spec.ts            # JSONPlaceholder API tests
 ├── auth-api-tests/
-│   ├── auth.spec.ts                # DummyJSON authentication tests
-│   └── fixtures.ts                 # Authenticated API client fixture
-│
-├── pages/                          # UI Page Object Model classes
-├── fixture/                        # Shared UI test fixtures
-├── utils/                           # Helpers such as screenshot capture
-│
-├── playwright.config.ts             # Projects, base URLs, reporters and settings
-├── package.json                    # Scripts and dependencies
-├── package-lock.json               # Locked dependency versions
-├── tsconfig.json                    # TypeScript configuration (if present)
-├── .env.example                     # Safe environment-variable template (optional)
-├── .gitignore                       # Excludes secrets and generated files
+│   ├── auth.spec.ts             # DummyJSON authentication tests
+│   └── fixtures.ts              # Authenticated API client fixture
+├── auth/                        # Authentication setup
+├── pages/                       # UI Page Object Model classes
+├── fixture/                     # Shared UI test fixtures
+├── utils/                       # Helpers such as screenshot capture
+├── tests/                       # UI test scenarios, including checkout tests
+├── playwright.config.ts         # Projects, base URLs, reporters and settings
+├── package.json                 # Scripts and dependencies
+├── package-lock.json            # Locked dependency versions
+├── tsconfig.json                # TypeScript configuration
+├── .env.example                 # Safe environment-variable template, if present
+├── .gitignore                   # Excludes secrets and generated files
 └── README.md
 ```
 
 ### File responsibilities
 
-  -----------------------------------------------------------------------
-  File / folder                       Responsibility
-  ----------------------------------- -----------------------------------
-  `pages/`                            Encapsulates UI locators and page
-                                      actions using the Page Object Model
+  ------------------------------------------------------------------------
+  File/folder                          Responsibility
+  ------------------------------------ -----------------------------------
+  `pages/`                             Encapsulates UI locators and page
+                                       actions using POM
 
-  `fixture/`                          Shares UI setup such as
-                                      authenticated pages between tests
+  `fixture/`                           Shares UI setup, such as
+                                       authenticated pages
 
-  `utils/`                            Reusable helpers, including
-                                      screenshot capture where configured
+  `utils/`                             Reusable helpers, including
+                                       screenshot capture where configured
 
-  `api/PostsApi.ts`                   Typed GET, filtered GET, POST, PUT,
-                                      PATCH, and DELETE operations
+  `api/PostsApi.ts`                    Typed GET, filtered GET, POST, PUT,
+                                       PATCH, and DELETE operations
 
-  `api/AuthApi.ts`                    Login, token reuse, refresh
-                                      exchange, and renewal fallback
+  `api/AuthApi.ts`                     Login, token reuse, refresh
+                                       exchange, and renewal fallback
 
-  `api/AuthenticatedApiClient.ts`     Adds bearer authentication to GET
-                                      requests and retries once after
-                                      `401`
+  `api/AuthenticatedApiClient.ts`      Adds bearer authentication to GET
+                                       requests and retries once after
+                                       `401`
 
-  `api-tests/posts.spec.ts`           Posts API assertions and response
-                                      validation
+  `api-tests/posts.spec.ts`            Posts API assertions and response
+                                       validation
 
-  `auth-api-tests/auth.spec.ts`       Login, protected-resource,
-                                      invalid-token, reuse, and refresh
-                                      scenarios
+  `auth-api-tests/auth.spec.ts`        Login, protected-resource,
+                                       invalid-token, reuse, and refresh
+                                       scenarios
 
-  `auth-api-tests/fixtures.ts`        Creates and disposes the
-                                      authenticated API request context
+  `auth-api-tests/fixtures.ts`         Creates and disposes the
+                                       authenticated API request context
 
-  `playwright.config.ts`              Configures test directories,
-                                      projects, base URLs, and reporters
+  `playwright.config.ts`               Configures test directories,
+                                       projects, base URLs, and reporters
 
-  `.github/workflows/`                CI workflow definition
-  -----------------------------------------------------------------------
+  `.github/workflows/playwright.yml`   CI workflow and report artifact
+                                       handling
+  ------------------------------------------------------------------------
 
 ## UI Automation Design
 
@@ -242,7 +212,7 @@ The UI layer follows the Page Object Model pattern:
 
 ``` mermaid
 flowchart LR
-    A[UI Spec / Test Scenario] --> B[Custom Fixture]
+    A[UI Test Scenario] --> B[Custom Fixture]
     B --> C[Authenticated Playwright Page]
     A --> D[Page Object]
     D --> E[Locators and Page Actions]
@@ -259,20 +229,20 @@ flowchart LR
 -   Shared page methods reduce duplication.
 -   Locator changes can often be maintained in one place.
 
-Use Playwright's auto-waiting locators and web-first assertions where
-possible. Avoid fixed sleeps unless there is a specific reason that
-cannot be addressed with a condition-based wait.
+Prefer Playwright's auto-waiting locators and web-first assertions.
+Avoid fixed sleeps unless a condition-based wait cannot reasonably
+address the situation.
 
 ## API Automation Design
 
 ### Posts API
 
-Base URL: `https://jsonplaceholder.typicode.com`
+**Base URL:** `https://jsonplaceholder.typicode.com`
 
 The `api/PostsApi.ts` client centralizes request methods and typed
 responses.
 
-Current test coverage includes:
+Current coverage described for this suite includes:
 
 -   Retrieve a post.
 -   Verify a missing post returns `404`.
@@ -284,9 +254,12 @@ Current test coverage includes:
 -   Delete a post.
 -   Validate selected response shapes with Zod.
 
+JSONPlaceholder is a practice API; write operations simulate behavior
+and should not be treated as persistent production data.
+
 ### Authentication API
 
-Base URL: `https://dummyjson.com`
+**Base URL:** `https://dummyjson.com`
 
 The authentication suite covers:
 
@@ -308,15 +281,15 @@ sequenceDiagram
 
     T->>C: Call typed client method
     C->>S: Send HTTP request
-    S-->>C: HTTP status, headers and body
-    C-->>T: Response and parsed body
+    S-->>C: Return status, headers and body
+    C-->>T: Return response and parsed body
     T->>V: Assert status and response contract
     V-->>T: Pass or fail
 ```
 
 ## Authentication and Token Lifecycle
 
-The authentication client is intended to avoid logging in before every
+The authentication client is designed to avoid logging in before every
 protected GET request.
 
 ``` mermaid
@@ -362,8 +335,8 @@ flowchart TD
 -   A production implementation may need cache keys scoped by API issuer
     and identity, plus synchronization for concurrent refresh-token
     rotation.
--   The tests use public practice API credentials. Do not use this
-    example as a production secrets-management pattern beyond the
+-   These are public practice API credentials. Do not use this example
+    as a production secrets-management pattern beyond the
     environment-variable approach.
 
 ## Setup
@@ -380,14 +353,14 @@ npm --version
 
 ### Install dependencies
 
-From the project root:
+Run from the project root:
 
 ``` bash
 npm ci
 npx playwright install
 ```
 
-On Linux CI, the workflow installs browser system dependencies with:
+On Linux CI, browser system dependencies are installed with:
 
 ``` bash
 npx playwright install --with-deps
@@ -402,10 +375,10 @@ AUTH_API_USERNAME=emilys
 AUTH_API_PASSWORD=emilyspass
 ```
 
-These are public DummyJSON practice credentials. The auth fixture loads
-environment variables with `dotenv/config`.
+These are public DummyJSON practice credentials. The authentication
+fixture loads environment variables with dotenv.
 
-Make sure `.gitignore` includes:
+Ensure `.gitignore` contains:
 
 ``` gitignore
 .env
@@ -439,14 +412,27 @@ npm run lint
 Run all tests selected by the configuration:
 
 ``` bash
-npx playwright test
+npm test
 ```
 
-Run a specific configured UI project (use the exact project name from
-`playwright.config.ts`):
+Run tests in a specific browser project:
+
+``` bash
+npm run test:chromium
+```
+
+Or use the Playwright CLI directly:
 
 ``` bash
 npx playwright test --project=chromium
+npx playwright test --project=firefox
+npx playwright test --project=webkit
+```
+
+Run the checkout tests in WebKit:
+
+``` bash
+npx playwright test tests/checkout.spec.ts --project=webkit
 ```
 
 ### API tests
@@ -462,95 +448,177 @@ npx playwright test --project=auth-api
 npx playwright test --project=auth-api --project=api
 ```
 
-### View the HTML report
+### Run in headed mode
 
 ``` bash
-npx playwright show-report
+npm run test:headed
 ```
 
-This command opens the most recent report directory generated by your
-configured reporter.
+## Reporting and Test Evidence
 
-## Reporting and Evidence
+The framework supports both the native Playwright HTML report and Allure
+reporting.
 
-The project uses Playwright reporting and can capture screenshots
-through its screenshot helper.
+### Native Playwright HTML report
 
-In CI, the workflow is designed to:
+The configured local HTML reporter generates a report without
+automatically opening it.
 
-1.  Upload a blob report from each UI shard.
-2.  Upload the API job's blob report.
-3.  Download all `blob-report-*` artifacts.
-4.  Merge the reports with `playwright merge-reports`.
-5.  Upload a consolidated HTML report artifact.
+``` bash
+npm run report
+```
 
-For the merge step to work, Playwright must produce blob reports in the
-expected `blob-report/` directory in both UI and API jobs. Confirm that
-`playwright.config.ts` configures the `blob` reporter in CI, along with
-any other desired reporters.
+If no report is available, run tests first to generate one.
+
+### Allure report
+
+`allure-playwright` collects test results in `allure-results/`. The
+`allure` CLI generates an HTML report in `allure-report/`.
+
+**Generate a report after running tests:**
+
+``` bash
+npm run allure:generate
+```
+
+**Open an already generated report:**
+
+``` bash
+npm run allure:open
+```
+
+**Serve a report directly from the raw results:**
+
+``` bash
+npm run allure:serve
+```
+
+**Remove generated Allure files:**
+
+``` bash
+npm run allure:clean
+```
+
+`allure:clean` removes both `allure-results/` and `allure-report/`. Run
+it before a fresh test execution only when you no longer need the
+previous results.
+
+### What the reports provide
+
+-   Test status summaries and test-level details.
+-   Failed-test information to support debugging.
+-   Execution breakdowns and visual summaries supported by the Allure
+    report.
+-   A separate native Playwright HTML report for familiar Playwright
+    diagnostics.
+
+Playwright trace and screenshot collection remain controlled by
+`playwright.config.ts`. For example, `trace: 'on-first-retry'` and
+`screenshot: 'only-on-failure'` collect evidence according to the
+configured run behavior.
+
+**Trend/history note:** Allure can show historical trends when prior
+report history is carried forward between runs. Generating a report from
+only the current run's results does not by itself preserve historical
+trends. The current workflow generates and uploads a consolidated
+report; persistent cross-run trend history requires an additional
+history-preservation step.
+
+### Generated report directories
+
+These generated directories should not be committed:
+
+``` text
+allure-results/
+allure-report/
+playwright-report/
+blob-report/
+test-results/
+```
+
+The repository `.gitignore` should exclude generated reports and test
+results.
 
 ## GitHub Actions CI
 
-Workflow directory:
+Workflow file:
 
 ``` text
-.github/workflows/
+.github/workflows/playwright.yml
 ```
 
-The workflow is configured to trigger on:
+The workflow is configured to run on:
 
--   Push to `main`.
--   Pull request targeting `main`.
--   Manual trigger through `workflow_dispatch`.
+-   Pushes to `main`.
+-   Pull requests targeting `main`.
+-   Manual execution through `workflow_dispatch`.
 
 ### CI stages
 
-  Stage                Purpose
-  -------------------- ---------------------------------------------
-  Checkout             Downloads the repository
-  Node setup           Sets up Node.js and npm caching
-  Dependency install   Runs `npm ci`
-  Quality checks       Runs TypeScript type-check and ESLint
-  UI test matrix       Runs UI browser projects across four shards
-  API test job         Runs `auth-api` and `api` projects
-  Artifact upload      Stores shard and API blob reports
-  Report merge         Builds a consolidated HTML report
-  HTML artifact        Keeps the consolidated report for 14 days
+  -----------------------------------------------------------------------
+  Job                                 Purpose
+  ----------------------------------- -----------------------------------
+  `test`                              Runs Chromium, Firefox, and WebKit
+                                      UI tests in four shards
+
+  `api-tests`                         Runs the `auth-api` and `api`
+                                      projects
+
+  `merge-reports`                     Downloads available report
+                                      artifacts, merges Playwright Blob
+                                      reports, and generates consolidated
+                                      reports
+  -----------------------------------------------------------------------
+
+The workflow uses Node.js 22, installs dependencies with `npm ci`, and
+runs type checking and linting in the UI job. UI shards and the API job
+upload their Playwright Blob reports and Allure results. The merge job
+combines the Playwright reports and merges Allure result files before
+generating the report artifacts.
+
+The consolidated Playwright HTML and Allure report artifacts are
+configured for retention for 14 days. Verify the actual workflow run in
+GitHub Actions before stating that CI passed.
 
 ### Configure GitHub Secrets
 
-In your GitHub repository, open:
+In your GitHub repository, navigate to:
 
 **Settings → Secrets and variables → Actions → New repository secret**
 
-Create:
+Create these repository secrets:
 
-  Secret name           Purpose
+  Secret                Purpose
   --------------------- -----------------------------
   `AUTH_API_USERNAME`   DummyJSON practice username
   `AUTH_API_PASSWORD`   DummyJSON practice password
 
-The API job maps these secrets to environment variables. Keep secrets
-out of YAML and logs.
+The workflow maps these secrets to environment variables for the API
+test job. Keep credentials out of workflow YAML and logs.
 
-### Check UI project names
-
-If the workflow command explicitly selects `chromium`, `firefox`, and
-`webkit`, ensure those exact names exist in `playwright.config.ts`.
-Change the workflow command to match the configured names if necessary.
-
-### Validate CI before relying on it
+### Validate CI
 
 After pushing changes:
 
 1.  Open the repository's **Actions** tab.
-2.  Open the latest **Playwright Tests** run.
-3.  Check the UI shard jobs and the API job.
+2.  Open the latest **Playwright Tests** workflow run.
+3.  Check the UI shard jobs and API job.
 4.  Check the report merge job.
-5.  Download and open the consolidated HTML report artifact.
+5.  Download and open the consolidated Playwright HTML and Allure report
+    artifacts.
 
-A locally passing suite does not guarantee the external API or
-GitHub-hosted workflow will pass on every run.
+A locally passing suite does not guarantee that an external practice API
+or GitHub-hosted workflow will pass on every run.
+
+## Environment Variables and Security
+
+-   Keep `.env` ignored by Git.
+-   Store CI credentials in GitHub Secrets.
+-   Never print passwords, access tokens, or refresh tokens in logs.
+-   Use dedicated practice accounts and non-production data.
+-   Do not commit generated report directories.
+-   Review artifacts before sharing them, because test attachments or
+    logs can contain sensitive information if tests capture it.
 
 ## Troubleshooting
 
@@ -569,16 +637,36 @@ The `--project` value must exactly match a project name in
 
 -   Check the API base URL for the selected project.
 -   Confirm the practice API is available.
--   Inspect status code and response body without logging credentials or
-    tokens.
+-   Inspect status codes and response bodies without logging credentials
+    or tokens.
 -   Remember that public practice APIs may change behavior or
     availability.
+
+### Allure report is empty or missing results
+
+1.  Run tests with the configured `allure-playwright` reporter.
+
+2.  Check that `allure-results/` contains result files.
+
+3.  Generate the report after the test run:
+
+    ``` bash
+    npm run allure:generate
+    ```
+
+4.  If the CLI reports an invalid option, check the installed CLI help
+    and align the script with that installed version.
+
+5.  In CI, check that each test job uploads its `allure-results/`
+    directory and that the merge job downloads the artifacts.
 
 ### Blob report merge failure
 
 -   Ensure the `blob` reporter is enabled in CI.
--   Ensure each job uploads the `blob-report/` directory.
--   Ensure the merge job downloads the matching report artifacts.
+-   Ensure each UI shard and the API job upload the `blob-report/`
+    directory.
+-   Ensure the merge job downloads the matching Blob report artifacts.
+-   Check the merge-job logs for missing or invalid report files.
 
 ### Type-check or lint failure
 
@@ -589,32 +677,25 @@ npm run typecheck
 npm run lint
 ```
 
-## Security Checklist
-
--   [ ] `.env` is ignored by Git.
--   [ ] No passwords or tokens are committed.
--   [ ] CI uses GitHub Secrets for authentication variables.
--   [ ] Logs do not print secrets or bearer tokens.
--   [ ] Tests use dedicated non-production accounts and data.
-
 ## Skills Demonstrated
 
-This project can be used to discuss the following SDET/QA Automation
-topics in interviews:
+This project can support SDET/QA Automation interview discussions
+around:
 
 -   Playwright with TypeScript.
 -   Page Object Model and custom fixtures.
 -   Cross-browser execution and sharding.
--   UI screenshots and HTML reports.
+-   UI checkout validation and regression testing.
 -   API CRUD testing and HTTP status validation.
 -   Zod runtime schema validation.
 -   Bearer-token authentication and refresh-token rotation.
 -   Safe, bounded retry behavior for GET requests.
--   GitHub Actions CI and artifact handling.
+-   Native Playwright HTML and Allure reporting.
+-   GitHub Actions CI, report merging, and artifact handling.
 -   Test isolation, environment configuration, and secret hygiene.
 
 ------------------------------------------------------------------------
 
-**Status:** The README describes the current intended framework design.
-Verify the latest local test run and GitHub Actions execution before
-claiming that a specific pipeline run passed.
+**Status:** This README documents the framework design and intended
+CI/reporting behavior. Confirm the latest GitHub Actions run before
+claiming that a specific pipeline execution passed.
